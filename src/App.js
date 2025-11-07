@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Papa from "papaparse";
 import "./App.css";
 
 const App = () => {
@@ -14,37 +15,30 @@ const App = () => {
   const mainColor = "#FAD419";
 
   // Função que simula a busca das questões (pode vir de um CSV no futuro)
-  const fetchQuestions = async (num) => {
-    const mockData = [
-      {
-        question: "Quanto é 12 + 8?",
-        options: ["18", "20", "22", "24"],
-        answer: "20",
+  
+
+const fetchQuestions = async (num) => {
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTaKcXV7_HFpr17q8estSoZlFcvQlikqwjaEOoMOI1IAMlj0HeDAXePTyqVruEMeY31Ifjexv0YsIa7/pub?output=csv"; // exemplo: https://docs.google.com/spreadsheets/d/e/xxxxxx/pub?output=csv
+
+  return new Promise((resolve, reject) => {
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: (results) => {
+        const data = results.data.map((row) => ({
+          question: row.question,
+          image: row.image || "",
+          options: [row.optionA, row.optionB, row.optionC, row.optionD].filter(Boolean),
+          answer: row.answer,
+        }));
+        // embaralhar e pegar apenas o número desejado
+        const randomSubset = data.sort(() => 0.5 - Math.random()).slice(0, num);
+        resolve(randomSubset);
       },
-      {
-        question: "Qual é o valor de 9²?",
-        options: ["18", "81", "27", "36"],
-        answer: "81",
-      },
-      {
-        question: "Se x = 3 e y = 2x, qual é o valor de y?",
-        options: ["3", "5", "6", "9"],
-        answer: "6",
-      },
-      {
-        question: "A raiz quadrada de 144 é:",
-        options: ["10", "12", "14", "16"],
-        answer: "12",
-      },
-      {
-        question: "Em uma PA com a1=3 e r=2, qual é o 5º termo?",
-        options: ["9", "11", "13", "15"],
-        answer: "11",
-      },
-    ];
-    // embaralhar e escolher
-    return mockData.sort(() => 0.5 - Math.random()).slice(0, num);
-  };
+      error: (err) => reject(err),
+    });
+  });
+};
 
   const startQuiz = async () => {
     const q = await fetchQuestions(parseInt(numQuestions));
